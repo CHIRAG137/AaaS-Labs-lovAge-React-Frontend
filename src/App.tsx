@@ -1,10 +1,10 @@
 
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import React from "react";
 import Index from "./pages/Index";
 import FindFriends from "./pages/FindFriends";
 import Friends from "./pages/Friends";
@@ -17,9 +17,9 @@ const queryClient = new QueryClient();
 // Define App as a proper React functional component
 const App: React.FC = () => {
   return (
-    <React.StrictMode>
-      <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <React.StrictMode>
           <TooltipProvider>
             <Toaster />
             <Sonner />
@@ -32,9 +32,9 @@ const App: React.FC = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
-        </QueryClientProvider>
-      </BrowserRouter>
-    </React.StrictMode>
+        </React.StrictMode>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 };
 
