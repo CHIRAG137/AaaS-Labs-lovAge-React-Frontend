@@ -4,24 +4,44 @@ import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="mt-16 py-6 bg-white border-t border-border">
+    <footer className="mt-16 py-8 bg-white border-t border-border">
       <div className="container max-w-6xl">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-primary mb-4">GoldenChat</h2>
-          <p className="text-lg mb-6">Connecting seniors through friendly conversations</p>
-          
-          <div className="flex flex-wrap justify-center gap-6 mb-6">
-            <Link to="/" className="text-lg hover:text-primary hover:underline">Video Chat</Link>
-            <Link to="/find-friends" className="text-lg hover:text-primary hover:underline">Find Friends</Link>
-            <Link to="/friends" className="text-lg hover:text-primary hover:underline">My Friends</Link>
-            <a href="#" className="text-lg hover:text-primary hover:underline">About Us</a>
-            <a href="#" className="text-lg hover:text-primary hover:underline">Help & Support</a>
-            <a href="#" className="text-lg hover:text-primary hover:underline">Privacy Policy</a>
-            <a href="#" className="text-lg hover:text-primary hover:underline">Terms of Use</a>
-            <a href="#" className="text-lg hover:text-primary hover:underline">Contact</a>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-4 md:px-0">
+          <div>
+            <h2 className="text-xl font-display font-bold text-primary mb-4">GoldenChat</h2>
+            <p className="text-muted-foreground">Connecting seniors through friendly conversations</p>
           </div>
           
-          <p className="text-muted-foreground">© 2025 GoldenChat. All rights reserved.</p>
+          <div>
+            <h3 className="font-display font-semibold mb-4">Features</h3>
+            <ul className="space-y-2">
+              <li><Link to="/" className="text-muted-foreground hover:text-primary transition-colors">Video Chat</Link></li>
+              <li><Link to="/find-friends" className="text-muted-foreground hover:text-primary transition-colors">Find Friends</Link></li>
+              <li><Link to="/friends" className="text-muted-foreground hover:text-primary transition-colors">My Friends</Link></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-display font-semibold mb-4">Help</h3>
+            <ul className="space-y-2">
+              <li><Link to="/settings" className="text-muted-foreground hover:text-primary transition-colors">Settings</Link></li>
+              <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Help & Support</a></li>
+              <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Accessibility</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-display font-semibold mb-4">Legal</h3>
+            <ul className="space-y-2">
+              <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Terms of Use</a></li>
+              <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+        
+        <div className="mt-12 pt-4 border-t border-border text-center text-sm text-muted-foreground">
+          <p>© {new Date().getFullYear()} GoldenChat. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -1,10 +1,13 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* Modern color scheme with softer, more accessible colors */
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
 
@@ -14,10 +17,12 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 199 89% 48%;
+    /* Updated primary to a more vibrant blue */
+    --primary: 210 100% 50%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 267 68% 86%;
+    /* Updated secondary to a complementary color */
+    --secondary: 267 68% 86%; 
     --secondary-foreground: 222 47% 11%;
 
     --muted: 210 40% 93%;
@@ -31,9 +36,33 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 199 89% 48%;
+    --ring: 215 20% 65%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
+  }
+
+  .high-contrast {
+    --background: 220 20% 97%;
+    --foreground: 220 70% 10%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 220 70% 10%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 70% 10%;
+    
+    --primary: 210 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 50% 80%;
+    --secondary-foreground: 220 70% 10%;
+    
+    --border: 220 20% 80%;
+  }
+
+  .simplified-ui * {
+    transition: none !important;
+    animation: none !important;
   }
 }
 
@@ -43,25 +72,37 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-size: 18px;
+    @apply bg-background text-foreground font-sans;
+    font-size: 16px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold tracking-tight;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-4 text-xl font-semibold shadow-md transition-all;
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 py-3 text-base md:text-lg font-semibold shadow-md transition-all;
   }
 
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full px-8 py-4 text-xl font-semibold shadow-md transition-all;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-full px-6 py-3 text-base md:text-lg font-semibold shadow-md transition-all;
   }
 
   .btn-outline {
-    @apply border-2 border-primary text-primary hover:bg-primary/10 rounded-full px-8 py-4 text-xl font-semibold shadow-sm transition-all;
+    @apply border-2 border-primary text-primary hover:bg-primary/10 rounded-full px-6 py-3 text-base md:text-lg font-semibold shadow-sm transition-all;
   }
 
   .card-elderly {
-    @apply bg-white rounded-2xl shadow-md p-6 border border-border;
+    @apply bg-white rounded-xl shadow-sm p-5 border border-border;
+  }
+
+  .page-title {
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4;
+  }
+  
+  .section-title {
+    @apply text-2xl md:text-3xl font-semibold text-foreground mb-3;
   }
 }
