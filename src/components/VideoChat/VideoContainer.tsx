@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Volume, VolumeX, Mic, MicOff, Phone } from 'lucide-react';
+import { Volume, VolumeX, Mic, MicOff, Phone, SkipForward } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const VideoContainer: React.FC = () => {
   const [isChatting, setIsChatting] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
   const { toast } = useToast();
 
   const startChat = () => {
@@ -19,6 +20,7 @@ const VideoContainer: React.FC = () => {
     // In a real app, this would initiate the WebRTC connection
     setTimeout(() => {
       setIsChatting(true);
+      setIsSkipping(false);
       toast({
         title: "Connected!",
         description: "You're now chatting with a new friend. Say hello!"
@@ -32,6 +34,23 @@ const VideoContainer: React.FC = () => {
       title: "Chat ended",
       description: "Your chat has ended. We hope you had a nice conversation!"
     });
+  };
+
+  const skipChat = () => {
+    setIsSkipping(true);
+    toast({
+      title: "Skipping to next person",
+      description: "Looking for someone new to talk with..."
+    });
+    
+    // In a real app, this would end current WebRTC connection and start a new one
+    setTimeout(() => {
+      setIsSkipping(false);
+      toast({
+        title: "Connected!",
+        description: "You're now chatting with a new friend. Say hello!"
+      });
+    }, 2000);
   };
 
   const toggleMic = () => {
@@ -57,11 +76,18 @@ const VideoContainer: React.FC = () => {
           <>
             {/* This would be replaced with actual video streams in a real app */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <img 
-                src="https://images.unsplash.com/photo-1472396961693-142e6e269027" 
-                alt="Video placeholder" 
-                className="w-full h-full object-cover"
-              />
+              {isSkipping ? (
+                <div className="flex flex-col items-center justify-center">
+                  <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+                  <p className="text-2xl font-medium mt-4">Finding new friend...</p>
+                </div>
+              ) : (
+                <img 
+                  src="https://images.unsplash.com/photo-1472396961693-142e6e269027" 
+                  alt="Video placeholder" 
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
             
             {/* Local video preview */}
@@ -80,6 +106,7 @@ const VideoContainer: React.FC = () => {
                 variant={isMuted ? "destructive" : "secondary"}
                 className="rounded-full w-14 h-14 flex items-center justify-center"
                 onClick={toggleMic}
+                disabled={isSkipping}
               >
                 {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
               </Button>
@@ -89,8 +116,19 @@ const VideoContainer: React.FC = () => {
                 variant="destructive"
                 className="rounded-full w-16 h-16 flex items-center justify-center"
                 onClick={endChat}
+                disabled={isSkipping}
               >
                 <Phone size={28} />
+              </Button>
+              
+              <Button 
+                size="lg"
+                variant="secondary"
+                className="rounded-full w-14 h-14 flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white"
+                onClick={skipChat}
+                disabled={isSkipping}
+              >
+                <SkipForward size={24} />
               </Button>
               
               <Button 
@@ -98,6 +136,7 @@ const VideoContainer: React.FC = () => {
                 variant={isAudioMuted ? "destructive" : "secondary"}
                 className="rounded-full w-14 h-14 flex items-center justify-center"
                 onClick={toggleAudio}
+                disabled={isSkipping}
               >
                 {isAudioMuted ? <VolumeX size={24} /> : <Volume size={24} />}
               </Button>
@@ -121,7 +160,7 @@ const VideoContainer: React.FC = () => {
       
       <div className="mt-8 text-center">
         <h3 className="text-2xl font-medium mb-4">How to use GoldenChat:</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="card-elderly">
             <div className="text-xl mb-2 font-semibold">1. Start a chat</div>
             <p>Click the "Start Video Chat" button to begin</p>
@@ -131,7 +170,11 @@ const VideoContainer: React.FC = () => {
             <p>Greet your new friend with a smile and a wave</p>
           </div>
           <div className="card-elderly">
-            <div className="text-xl mb-2 font-semibold">3. End anytime</div>
+            <div className="text-xl mb-2 font-semibold">3. Skip to next</div>
+            <p>Press the yellow button to find a new person to chat with</p>
+          </div>
+          <div className="card-elderly">
+            <div className="text-xl mb-2 font-semibold">4. End anytime</div>
             <p>Press the red button when you're ready to finish</p>
           </div>
         </div>
