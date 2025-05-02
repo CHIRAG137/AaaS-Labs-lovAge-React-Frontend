@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="mt-16 py-8 bg-white border-t border-border">
+    <footer className="mt-auto py-8 bg-white border-t border-border">
       <div className="container max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-4 md:px-0">
           <div>
@@ -40,7 +40,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
         
-        <div className="mt-12 pt-4 border-t border-border text-center text-sm text-muted-foreground">
+        <div className="mt-8 pt-4 border-t border-border text-center text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} GoldenChat. All rights reserved.</p>
         </div>
       </div>

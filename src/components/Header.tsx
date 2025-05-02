@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FontSizeIcon } from './icons/FontSizeIcon';
 import { useToast } from '@/components/ui/use-toast';
-import { Link } from 'react-router-dom';
-import { Users, MessageSquare, Settings, Menu, X } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Users, MessageSquare, Settings, Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const Header: React.FC = () => {
   const { toast } = useToast();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
   
   const increaseFontSize = () => {
     // Get the current font size
@@ -23,9 +23,13 @@ const Header: React.FC = () => {
     });
   };
   
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+  
   return (
     <header className="w-full px-4 md:px-6 py-3 flex items-center justify-between bg-white shadow-sm">
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center gap-2">
         <Link to="/" className="flex items-center">
           <h1 className="text-2xl md:text-3xl font-display font-bold text-primary">GoldenChat</h1>
         </Link>
@@ -33,19 +37,19 @@ const Header: React.FC = () => {
       
       {/* Desktop Navigation */}
       <nav className="hidden md:flex items-center gap-5">
-        <Link to="/" className="text-base font-medium hover:text-primary flex items-center gap-2 transition-colors">
+        <Link to="/" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
           <MessageSquare size={18} />
           Video Chat
         </Link>
-        <Link to="/find-friends" className="text-base font-medium hover:text-primary flex items-center gap-2 transition-colors">
+        <Link to="/find-friends" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/find-friends') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
           <Users size={18} />
           Find Friends
         </Link>
-        <Link to="/friends" className="text-base font-medium hover:text-primary flex items-center gap-2 transition-colors">
+        <Link to="/friends" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/friends') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
           <Users size={18} />
           My Friends
         </Link>
-        <Link to="/settings" className="text-base font-medium hover:text-primary flex items-center gap-2 transition-colors">
+        <Link to="/settings" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/settings') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
           <Settings size={18} />
           Settings
         </Link>
@@ -68,27 +72,27 @@ const Header: React.FC = () => {
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+          <SheetContent side="right" className="w-[280px] sm:w-[350px]">
             <nav className="flex flex-col gap-6 mt-8">
-              <Link to="/" className="text-xl font-medium hover:text-primary flex items-center gap-2">
+              <Link to="/" className={`text-lg font-medium flex items-center gap-2 ${isActive('/') ? 'text-primary' : 'hover:text-primary'}`}>
                 <MessageSquare size={20} />
                 Video Chat
               </Link>
-              <Link to="/find-friends" className="text-xl font-medium hover:text-primary flex items-center gap-2">
+              <Link to="/find-friends" className={`text-lg font-medium flex items-center gap-2 ${isActive('/find-friends') ? 'text-primary' : 'hover:text-primary'}`}>
                 <Users size={20} />
                 Find Friends
               </Link>
-              <Link to="/friends" className="text-xl font-medium hover:text-primary flex items-center gap-2">
+              <Link to="/friends" className={`text-lg font-medium flex items-center gap-2 ${isActive('/friends') ? 'text-primary' : 'hover:text-primary'}`}>
                 <Users size={20} />
                 My Friends
               </Link>
-              <Link to="/settings" className="text-xl font-medium hover:text-primary flex items-center gap-2">
+              <Link to="/settings" className={`text-lg font-medium flex items-center gap-2 ${isActive('/settings') ? 'text-primary' : 'hover:text-primary'}`}>
                 <Settings size={20} />
                 Settings
               </Link>
               <Button 
                 variant="outline" 
-                className="flex items-center justify-center gap-2 text-lg w-full mt-4" 
+                className="flex items-center justify-center gap-2 w-full mt-4" 
                 onClick={increaseFontSize}
               >
                 <FontSizeIcon className="w-5 h-5" />

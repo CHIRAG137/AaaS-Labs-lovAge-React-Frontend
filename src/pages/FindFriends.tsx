@@ -4,7 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FriendCard from '@/components/Friends/FriendCard';
 import { Button } from '@/components/ui/button';
-import { MapPin, MessageSquare, Heart, Search } from 'lucide-react';
+import { MapPin, Search } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const FindFriends = () => {
@@ -45,8 +45,8 @@ const FindFriends = () => {
       
       <main className="flex-grow container mx-auto px-4 py-6">
         <section className="text-center mb-8 animate-fade-in">
-          <h1 className="text-5xl font-bold mb-6">Find New <span className="text-primary">Friends</span></h1>
-          <p className="text-2xl max-w-3xl mx-auto">
+          <h1 className="page-title">Find New <span className="text-primary">Friends</span></h1>
+          <p className="text-lg max-w-3xl mx-auto mb-6 text-muted-foreground">
             Discover friendly people who share your interests
           </p>
         </section>
@@ -56,9 +56,9 @@ const FindFriends = () => {
             size="lg" 
             variant={activeTab === 'nearby' ? 'default' : 'outline'}
             onClick={() => setActiveTab('nearby')}
-            className="gap-2 text-xl"
+            className="gap-2"
           >
-            <MapPin size={24} />
+            <MapPin size={20} />
             Nearby Friends
           </Button>
           
@@ -66,9 +66,9 @@ const FindFriends = () => {
             size="lg" 
             variant={activeTab === 'all' ? 'default' : 'outline'}
             onClick={() => setActiveTab('all')}
-            className="gap-2 text-xl"
+            className="gap-2"
           >
-            <Search size={24} />
+            <Search size={20} />
             All Friends
           </Button>
         </div>
@@ -84,11 +84,11 @@ const FindFriends = () => {
           ))}
         </div>
         
-        <div className="text-center mt-12">
+        <div className="text-center mt-10">
           <Button 
             size="lg"
             variant="default"
-            className="btn-primary text-xl"
+            className="text-base"
           >
             Find More Friends
           </Button>
