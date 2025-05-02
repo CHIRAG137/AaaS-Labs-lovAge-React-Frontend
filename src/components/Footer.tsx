@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
@@ -10,6 +11,9 @@ const Footer: React.FC = () => {
           <p className="text-lg mb-6">Connecting seniors through friendly conversations</p>
           
           <div className="flex flex-wrap justify-center gap-6 mb-6">
+            <Link to="/" className="text-lg hover:text-primary hover:underline">Video Chat</Link>
+            <Link to="/find-friends" className="text-lg hover:text-primary hover:underline">Find Friends</Link>
+            <Link to="/friends" className="text-lg hover:text-primary hover:underline">My Friends</Link>
             <a href="#" className="text-lg hover:text-primary hover:underline">About Us</a>
             <a href="#" className="text-lg hover:text-primary hover:underline">Help & Support</a>
             <a href="#" className="text-lg hover:text-primary hover:underline">Privacy Policy</a>
