@@ -4,7 +4,7 @@ import Header from '@/components/Header';
 import VideoContainer from '@/components/VideoChat/VideoContainer';
 import Footer from '@/components/Footer';
 import { Link } from 'react-router-dom';
-import { Users, Settings } from 'lucide-react';
+import { Users, Settings, UserPlus, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
@@ -24,6 +24,18 @@ const Index = () => {
               <Button className="flex items-center gap-2">
                 <Users size={18} />
                 Find Friends Nearby
+              </Button>
+            </Link>
+            <Link to="/register">
+              <Button variant="default" className="flex items-center gap-2">
+                <UserPlus size={18} />
+                Join Now
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button variant="outline" className="flex items-center gap-2">
+                <LogIn size={18} />
+                Log In
               </Button>
             </Link>
             <Link to="/settings">

@@ -9,6 +9,9 @@ import Index from "./pages/Index";
 import FindFriends from "./pages/FindFriends";
 import Friends from "./pages/Friends";
 import Settings from "./pages/Settings";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 // Create the query client
@@ -28,6 +31,9 @@ const App: React.FC = () => {
               <Route path="/find-friends" element={<FindFriends />} />
               <Route path="/friends" element={<Friends />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/profile" element={<Profile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
