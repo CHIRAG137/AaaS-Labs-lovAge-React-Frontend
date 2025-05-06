@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { FontSizeIcon } from './icons/FontSizeIcon';
 import { useToast } from '@/components/ui/use-toast';
 import { Link, useLocation } from 'react-router-dom';
-import { Users, MessageSquare, Settings, Menu, UserPlus, LogIn } from 'lucide-react';
+import { Users, MessageSquare, Settings, Menu, UserPlus, LogIn, Gamepad } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const Header: React.FC = () => {
@@ -48,6 +48,10 @@ const Header: React.FC = () => {
         <Link to="/find-friends" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/find-friends') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
           <Users size={18} />
           Find Friends
+        </Link>
+        <Link to="/games" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/games') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
+          <Gamepad size={18} />
+          Games
         </Link>
         {isAuthenticated && (
           <Link to="/friends" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/friends') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
@@ -105,6 +109,10 @@ const Header: React.FC = () => {
               <Link to="/find-friends" className={`text-lg font-medium flex items-center gap-2 ${isActive('/find-friends') ? 'text-primary' : 'hover:text-primary'}`}>
                 <Users size={20} />
                 Find Friends
+              </Link>
+              <Link to="/games" className={`text-lg font-medium flex items-center gap-2 ${isActive('/games') ? 'text-primary' : 'hover:text-primary'}`}>
+                <Gamepad size={20} />
+                Games
               </Link>
               {isAuthenticated && (
                 <Link to="/friends" className={`text-lg font-medium flex items-center gap-2 ${isActive('/friends') ? 'text-primary' : 'hover:text-primary'}`}>

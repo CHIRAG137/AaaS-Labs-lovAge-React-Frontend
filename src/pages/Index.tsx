@@ -4,7 +4,6 @@ import Header from '@/components/Header';
 import VideoContainer from '@/components/VideoChat/VideoContainer';
 import Footer from '@/components/Footer';
 import MoodCheckIn from '@/components/MoodCheckIn/MoodCheckIn';
-import GamesContainer from '@/components/Games/GamesContainer';
 
 const Index = () => {
   return (
@@ -17,20 +16,15 @@ const Index = () => {
           <p className="text-lg max-w-3xl mx-auto mb-8 text-muted-foreground">
             A friendly place to meet and talk with others through simple video chats
           </p>
-        </section>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-          <div>
-            <h2 className="text-2xl font-display font-semibold text-center mb-6">Daily Mood Check-in</h2>
+          
+          <div className="mt-6 mb-10 flex justify-center">
             <MoodCheckIn />
           </div>
-          
-          <div>
-            <VideoContainer />
-          </div>
-        </div>
+        </section>
         
-        <GamesContainer />
+        <div className="max-w-3xl mx-auto">
+          <VideoContainer />
+        </div>
       </main>
       
       <Footer />
