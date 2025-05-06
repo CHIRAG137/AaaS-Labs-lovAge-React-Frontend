@@ -1,18 +1,30 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { MessageSquare, Send } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { Send } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import MessageBubble from '@/components/Messaging/MessageBubble';
 
 const Messaging = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { state } = location;
+  
+  // If no friend data is provided, redirect back to friends page
+  useEffect(() => {
+    if (!state || !state.friend) {
+      navigate('/friends');
+    }
+  }, [state, navigate]);
+  
+  // Default friend data as fallback
   const { friend } = state || { 
     friend: { 
       id: '1', 
@@ -29,6 +41,11 @@ const Messaging = () => {
   
   const [newMessage, setNewMessage] = useState('');
   const { toast } = useToast();
+  
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
   
   const handleSendMessage = () => {
     if (newMessage.trim() === '') return;
@@ -82,22 +99,14 @@ const Messaging = () => {
           {/* Messages area */}
           <div className="flex-grow overflow-y-auto p-4 space-y-4" style={{ scrollBehavior: 'smooth' }}>
             {messages.map((message) => (
-              <div 
-                key={message.id} 
-                className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div 
-                  className={`max-w-[80%] ${
-                    message.sender === 'me' 
-                      ? 'bg-primary text-primary-foreground rounded-2xl rounded-tr-none' 
-                      : 'bg-secondary rounded-2xl rounded-tl-none'
-                  } px-4 py-3 shadow-sm`}
-                >
-                  <p className="text-base mb-1">{message.content}</p>
-                  <p className="text-xs opacity-70 text-right">{message.timestamp}</p>
-                </div>
-              </div>
+              <MessageBubble
+                key={message.id}
+                content={message.content}
+                timestamp={message.timestamp}
+                isSentByMe={message.sender === 'me'}
+              />
             ))}
+            <div ref={messagesEndRef} />
           </div>
           
           {/* Message input */}

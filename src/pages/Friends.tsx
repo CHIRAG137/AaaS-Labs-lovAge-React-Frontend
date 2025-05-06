@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -39,15 +40,9 @@ const Friends = () => {
     });
   };
   
-  const startChat = (id: string, name: string, image: string) => {
+  const startChat = (friend: { id: string; name: string; image: string; }) => {
     navigate('/messaging', { 
-      state: { 
-        friend: {
-          id,
-          name,
-          image
-        }
-      } 
+      state: { friend }
     });
   };
   
@@ -160,7 +155,7 @@ const Friends = () => {
                         Video Call
                       </Button>
                       <Button 
-                        onClick={() => startChat(friend.id, friend.name, friend.image)}
+                        onClick={() => startChat(friend)}
                         variant="outline"
                         className="gap-2"
                       >
