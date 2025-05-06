@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    /* Modern color scheme with softer, more accessible colors */
+    /* Updated color scheme with #006241 as primary */
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
 
@@ -17,18 +17,18 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Updated primary to a more vibrant blue */
-    --primary: 210 100% 50%;
+    /* Updated primary to #006241 (rich green) */
+    --primary: 158 100% 19%;
     --primary-foreground: 210 40% 98%;
 
-    /* Updated secondary to a complementary color */
-    --secondary: 267 68% 86%; 
+    /* Updated secondary to be more complementary with the green */
+    --secondary: 158 30% 90%; 
     --secondary-foreground: 222 47% 11%;
 
     --muted: 210 40% 93%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 267 68% 86%;
+    --accent: 158 30% 90%;
     --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
@@ -36,7 +36,7 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 215 20% 65%;
+    --ring: 158 100% 19%;
 
     --radius: 0.75rem;
   }
@@ -51,10 +51,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 70% 10%;
     
-    --primary: 210 100% 45%;
+    --primary: 158 100% 19%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 220 50% 80%;
+    --secondary: 158 30% 80%;
     --secondary-foreground: 220 70% 10%;
     
     --border: 220 20% 80%;

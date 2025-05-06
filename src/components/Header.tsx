@@ -4,12 +4,16 @@ import { Button } from '@/components/ui/button';
 import { FontSizeIcon } from './icons/FontSizeIcon';
 import { useToast } from '@/components/ui/use-toast';
 import { Link, useLocation } from 'react-router-dom';
-import { Users, MessageSquare, Settings, Menu } from 'lucide-react';
+import { Users, MessageSquare, Settings, Menu, UserPlus, LogIn } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const Header: React.FC = () => {
   const { toast } = useToast();
   const location = useLocation();
+  
+  // Mock authenticated state - in a real app, this would come from your auth context/provider
+  // For testing purposes, change this to true/false to see the different navigation states
+  const isAuthenticated = false;
   
   const increaseFontSize = () => {
     // Get the current font size
@@ -45,14 +49,34 @@ const Header: React.FC = () => {
           <Users size={18} />
           Find Friends
         </Link>
-        <Link to="/friends" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/friends') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
-          <Users size={18} />
-          My Friends
-        </Link>
-        <Link to="/settings" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/settings') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
-          <Settings size={18} />
-          Settings
-        </Link>
+        {isAuthenticated && (
+          <Link to="/friends" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/friends') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
+            <Users size={18} />
+            My Friends
+          </Link>
+        )}
+        {isAuthenticated && (
+          <Link to="/settings" className={`text-base font-medium flex items-center gap-2 transition-colors ${isActive('/settings') ? 'text-primary' : 'text-foreground hover:text-primary'}`}>
+            <Settings size={18} />
+            Settings
+          </Link>
+        )}
+        {!isAuthenticated && (
+          <>
+            <Link to="/login" className="ml-2">
+              <Button variant="outline" className="flex items-center gap-2">
+                <LogIn size={18} />
+                Log In
+              </Button>
+            </Link>
+            <Link to="/register">
+              <Button className="flex items-center gap-2">
+                <UserPlus size={18} />
+                Join Now
+              </Button>
+            </Link>
+          </>
+        )}
         <Button 
           variant="outline" 
           className="flex items-center gap-1 ml-3" 
@@ -82,14 +106,32 @@ const Header: React.FC = () => {
                 <Users size={20} />
                 Find Friends
               </Link>
-              <Link to="/friends" className={`text-lg font-medium flex items-center gap-2 ${isActive('/friends') ? 'text-primary' : 'hover:text-primary'}`}>
-                <Users size={20} />
-                My Friends
-              </Link>
-              <Link to="/settings" className={`text-lg font-medium flex items-center gap-2 ${isActive('/settings') ? 'text-primary' : 'hover:text-primary'}`}>
-                <Settings size={20} />
-                Settings
-              </Link>
+              {isAuthenticated && (
+                <Link to="/friends" className={`text-lg font-medium flex items-center gap-2 ${isActive('/friends') ? 'text-primary' : 'hover:text-primary'}`}>
+                  <Users size={20} />
+                  My Friends
+                </Link>
+              )}
+              {isAuthenticated && (
+                <Link to="/settings" className={`text-lg font-medium flex items-center gap-2 ${isActive('/settings') ? 'text-primary' : 'hover:text-primary'}`}>
+                  <Settings size={20} />
+                  Settings
+                </Link>
+              )}
+              {!isAuthenticated && (
+                <>
+                  <Link to="/login" className={`text-lg font-medium flex items-center gap-2 ${isActive('/login') ? 'text-primary' : 'hover:text-primary'}`}>
+                    <LogIn size={20} />
+                    Log In
+                  </Link>
+                  <Link to="/register" className="mt-2">
+                    <Button className="flex items-center justify-center gap-2 w-full">
+                      <UserPlus size={20} />
+                      Join Now
+                    </Button>
+                  </Link>
+                </>
+              )}
               <Button 
                 variant="outline" 
                 className="flex items-center justify-center gap-2 w-full mt-4" 
