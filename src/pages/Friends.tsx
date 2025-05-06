@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -7,10 +6,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Heart, Users } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Friends = () => {
   const [activeTab, setActiveTab] = useState<'friends' | 'requests'>('friends');
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Mock data
   const friendRequests = [
@@ -38,10 +39,15 @@ const Friends = () => {
     });
   };
   
-  const startChat = (id: string, name: string) => {
-    toast({
-      title: "Chat opened",
-      description: `You can now start chatting with ${name}.`,
+  const startChat = (id: string, name: string, image: string) => {
+    navigate('/messaging', { 
+      state: { 
+        friend: {
+          id,
+          name,
+          image
+        }
+      } 
     });
   };
   
@@ -154,7 +160,7 @@ const Friends = () => {
                         Video Call
                       </Button>
                       <Button 
-                        onClick={() => startChat(friend.id, friend.name)}
+                        onClick={() => startChat(friend.id, friend.name, friend.image)}
                         variant="outline"
                         className="gap-2"
                       >
