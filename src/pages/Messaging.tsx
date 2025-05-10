@@ -21,6 +21,7 @@ const Messaging = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
   
   // Check if friend data is available in the location state
   const friendData = location.state?.friend;
@@ -28,7 +29,10 @@ const Messaging = () => {
   // If no friend data is provided, redirect back to friends page
   useEffect(() => {
     if (!friendData) {
+      console.log("No friend data found, redirecting to friends page");
       navigate('/friends');
+    } else {
+      console.log("Friend data received:", friendData);
     }
   }, [friendData, navigate]);
   
@@ -46,7 +50,6 @@ const Messaging = () => {
   ]);
   
   const [newMessage, setNewMessage] = useState('');
-  const { toast } = useToast();
   
   // Scroll to bottom when new messages are added
   useEffect(() => {
