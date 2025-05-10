@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Volume, VolumeX, Mic, MicOff, Phone, SkipForward, MessageSquare, X } from 'lucide-react';
@@ -6,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import ChatMessage from './ChatMessage';
 
 interface Message {
   id: number;
@@ -148,8 +148,8 @@ const VideoContainer: React.FC = () => {
               )}
             </div>
             
-            {/* Local video preview */}
-            <div className="absolute bottom-4 right-4 w-48 h-36 bg-black/20 rounded-lg overflow-hidden border-2 border-white">
+            {/* Local video preview - moved to left side to avoid overlap with chat */}
+            <div className="absolute bottom-4 left-4 w-48 h-36 bg-black/20 rounded-lg overflow-hidden border-2 border-white">
               <img 
                 src="https://images.unsplash.com/photo-1582562124811-c09040d0a901" 
                 alt="Your video" 
@@ -157,9 +157,9 @@ const VideoContainer: React.FC = () => {
               />
             </div>
             
-            {/* Text chat sidebar */}
+            {/* Text chat sidebar - improved positioning */}
             {showTextChat && (
-              <div className="absolute top-0 right-0 h-full w-80 bg-white/95 dark:bg-gray-800/95 shadow-lg flex flex-col">
+              <div className="absolute top-0 right-0 bottom-0 h-full w-80 bg-white/95 dark:bg-gray-800/95 shadow-lg flex flex-col z-10">
                 <div className="flex justify-between items-center p-3 border-b">
                   <h3 className="font-semibold">Chat</h3>
                   <Button 
@@ -175,13 +175,12 @@ const VideoContainer: React.FC = () => {
                 <ScrollArea className="flex-grow p-3">
                   <div className="space-y-3">
                     {messages.map((message) => (
-                      <div 
-                        key={message.id} 
-                        className={`max-w-[90%] ${message.sender === 'me' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-secondary'} rounded-xl p-3`}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                        <p className="text-xs opacity-70 text-right mt-1">{message.timestamp}</p>
-                      </div>
+                      <ChatMessage
+                        key={message.id}
+                        content={message.content}
+                        timestamp={message.timestamp}
+                        isSentByMe={message.sender === 'me'}
+                      />
                     ))}
                     <div ref={messagesEndRef} />
                   </div>
@@ -211,8 +210,8 @@ const VideoContainer: React.FC = () => {
               </div>
             )}
             
-            {/* Controls */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
+            {/* Controls - moved to center bottom with more space */}
+            <div className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-4 ${showTextChat ? 'pr-80' : ''}`}>
               <Button 
                 size="lg"
                 variant={isMuted ? "destructive" : "secondary"}
