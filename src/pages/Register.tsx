@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -14,6 +13,10 @@ import { z } from 'zod';
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UserPlus } from 'lucide-react';
+import axios from 'axios'; // Make sure to install axios: npm install axios
+
+// API base URL - update this to match your server URL
+const API_URL = 'http://localhost:5000/api';
 
 const registerSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -64,24 +67,41 @@ const Register = () => {
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      // Here you would typically register with a backend
-      // For now, we'll simulate a successful registration
-      console.log("Registration data:", data);
+      // API call to register user
+      const response = await axios.post(`${API_URL}/auth/register`, {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        age: data.age,
+        hobbies: data.hobbies,
+        about: data.about,
+        preferredCommunication: data.preferredCommunication,
+      });
       
-      setTimeout(() => {
-        toast({
-          title: "Registration successful!",
-          description: "Welcome to GoldenChat! Your profile has been created.",
-        });
-        navigate('/profile');
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
+      // Handle successful registration
+      toast({
+        title: "Registration successful!",
+        description: "Welcome to GoldenChat! Your profile has been created.",
+      });
+      
+      // Store user data or token in localStorage if needed
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Redirect to profile page
+      navigate('/profile');
+    } catch (error: any) {
+      // Handle registration errors
+      console.error("Registration error:", error);
+      
+      const errorMessage = error.response?.data?.message || "Registration failed. Please try again.";
+      
       toast({
         title: "Registration failed",
-        description: "Please try again later.",
+        description: errorMessage,
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
