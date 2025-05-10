@@ -11,26 +11,32 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import MessageBubble from '@/components/Messaging/MessageBubble';
 
+interface Friend {
+  id: string;
+  name: string;
+  image: string;
+}
+
 const Messaging = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { state } = location;
+  
+  // Check if friend data is available in the location state
+  const friendData = location.state?.friend;
   
   // If no friend data is provided, redirect back to friends page
   useEffect(() => {
-    if (!state || !state.friend) {
+    if (!friendData) {
       navigate('/friends');
     }
-  }, [state, navigate]);
+  }, [friendData, navigate]);
   
-  // Default friend data as fallback
-  const { friend } = state || { 
-    friend: { 
-      id: '1', 
-      name: 'Elizabeth', 
-      image: 'https://images.unsplash.com/photo-1581579438747-104c53d7fbc0' 
-    } 
+  // Use the friend data from state or fallback to default
+  const friend: Friend = friendData || { 
+    id: '1', 
+    name: 'Elizabeth', 
+    image: 'https://images.unsplash.com/photo-1581579438747-104c53d7fbc0' 
   };
   
   const [messages, setMessages] = useState([
