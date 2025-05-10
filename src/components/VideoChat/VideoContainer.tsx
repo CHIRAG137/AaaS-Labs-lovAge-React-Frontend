@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Volume, VolumeX, Mic, MicOff, Phone, SkipForward, MessageSquare, X } from 'lucide-react';
+import { Volume, VolumeX, Mic, MicOff, Phone, SkipForward, MessageSquare, X, Maximize, Minimize } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -22,13 +22,31 @@ const VideoContainer: React.FC = () => {
   const [showTextChat, setShowTextChat] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [videoPosition, setVideoPosition] = useState({ x: 4, y: 4 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const localVideoRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when new messages are added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullScreenChange);
+    };
+  }, []);
 
   const startChat = () => {
     toast({
@@ -101,6 +119,66 @@ const VideoContainer: React.FC = () => {
     }
   };
 
+  const toggleFullScreen = async () => {
+    if (!document.fullscreenElement) {
+      try {
+        if (containerRef.current) {
+          await containerRef.current.requestFullscreen();
+        }
+      } catch (err) {
+        toast({
+          title: "Fullscreen error",
+          description: "Could not enter fullscreen mode"
+        });
+      }
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const handleMouseDown = (e) => {
+    if (localVideoRef.current) {
+      setIsDragging(true);
+      const rect = localVideoRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDragging && containerRef.current) {
+      e.preventDefault();
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const localVideoRect = localVideoRef.current.getBoundingClientRect();
+      
+      let newX = e.clientX - containerRect.left - dragOffset.x;
+      let newY = e.clientY - containerRect.top - dragOffset.y;
+      
+      // Keep within bounds
+      newX = Math.max(0, Math.min(newX, containerRect.width - localVideoRect.width));
+      newY = Math.max(0, Math.min(newY, containerRect.height - localVideoRect.height));
+      
+      setVideoPosition({ x: newX, y: newY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Add event listeners for drag and drop
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
   const handleSendMessage = () => {
     if (newMessage.trim() === '') return;
     
@@ -129,7 +207,10 @@ const VideoContainer: React.FC = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-8">
-      <div className="card-elderly aspect-video bg-muted overflow-hidden relative">
+      <div 
+        ref={containerRef}
+        className={`card-elderly aspect-video bg-muted overflow-hidden relative ${isFullScreen ? 'w-full h-full' : ''}`}
+      >
         {isChatting ? (
           <>
             {/* This would be replaced with actual video streams in a real app */}
@@ -148,12 +229,32 @@ const VideoContainer: React.FC = () => {
               )}
             </div>
             
-            {/* Local video preview - moved to left side to avoid overlap with chat */}
-            <div className="absolute bottom-4 left-4 w-48 h-36 bg-black/20 rounded-lg overflow-hidden border-2 border-white">
+            {/* Fullscreen toggle button */}
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute top-4 right-4 rounded-full bg-black/30 hover:bg-black/50 text-white z-20"
+              onClick={toggleFullScreen}
+            >
+              {isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
+            </Button>
+            
+            {/* Local video preview - now draggable */}
+            <div 
+              ref={localVideoRef}
+              className="absolute w-48 h-36 bg-black/20 rounded-lg overflow-hidden border-2 border-white cursor-move"
+              style={{ 
+                left: `${videoPosition.x}px`, 
+                bottom: `${videoPosition.y}px`,
+                touchAction: 'none',
+                zIndex: 15
+              }}
+              onMouseDown={handleMouseDown}
+            >
               <img 
                 src="https://images.unsplash.com/photo-1582562124811-c09040d0a901" 
                 alt="Your video" 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover pointer-events-none"
               />
             </div>
             
