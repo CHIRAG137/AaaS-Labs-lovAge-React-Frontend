@@ -1,15 +1,34 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Volume, VolumeX, Mic, MicOff, Phone, SkipForward } from 'lucide-react';
+import { Volume, VolumeX, Mic, MicOff, Phone, SkipForward, MessageSquare, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+interface Message {
+  id: number;
+  content: string;
+  sender: 'me' | 'friend';
+  timestamp: string;
+}
 
 const VideoContainer: React.FC = () => {
   const [isChatting, setIsChatting] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
+  const [showTextChat, setShowTextChat] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const startChat = () => {
     toast({
@@ -30,6 +49,8 @@ const VideoContainer: React.FC = () => {
 
   const endChat = () => {
     setIsChatting(false);
+    setShowTextChat(false);
+    setMessages([]);
     toast({
       title: "Chat ended",
       description: "Your chat has ended. We hope you had a nice conversation!"
@@ -46,6 +67,7 @@ const VideoContainer: React.FC = () => {
     // In a real app, this would end current WebRTC connection and start a new one
     setTimeout(() => {
       setIsSkipping(false);
+      setMessages([]);
       toast({
         title: "Connected!",
         description: "You're now chatting with a new friend. Say hello!"
@@ -67,6 +89,42 @@ const VideoContainer: React.FC = () => {
       title: isAudioMuted ? "Speaker turned on" : "Speaker turned off",
       description: isAudioMuted ? "You can now hear others" : "You cannot hear others now"
     });
+  };
+
+  const toggleTextChat = () => {
+    setShowTextChat(!showTextChat);
+    if (!showTextChat) {
+      toast({
+        title: "Text chat opened",
+        description: "You can now send text messages during your video call"
+      });
+    }
+  };
+
+  const handleSendMessage = () => {
+    if (newMessage.trim() === '') return;
+    
+    const newMsg: Message = {
+      id: messages.length + 1,
+      content: newMessage,
+      sender: 'me',
+      timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    };
+    
+    setMessages([...messages, newMsg]);
+    setNewMessage('');
+    
+    // Simulate a reply after a delay (in a real app, this would be handled by your backend)
+    setTimeout(() => {
+      const replyMsg: Message = {
+        id: messages.length + 2,
+        content: "I received your message! This is a simple reply.",
+        sender: 'friend',
+        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      };
+      
+      setMessages(prevMessages => [...prevMessages, replyMsg]);
+    }, 2000);
   };
 
   return (
@@ -98,6 +156,60 @@ const VideoContainer: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             </div>
+            
+            {/* Text chat sidebar */}
+            {showTextChat && (
+              <div className="absolute top-0 right-0 h-full w-80 bg-white/95 dark:bg-gray-800/95 shadow-lg flex flex-col">
+                <div className="flex justify-between items-center p-3 border-b">
+                  <h3 className="font-semibold">Chat</h3>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full" 
+                    onClick={toggleTextChat}
+                  >
+                    <X size={20} />
+                  </Button>
+                </div>
+                
+                <ScrollArea className="flex-grow p-3">
+                  <div className="space-y-3">
+                    {messages.map((message) => (
+                      <div 
+                        key={message.id} 
+                        className={`max-w-[90%] ${message.sender === 'me' ? 'ml-auto bg-primary text-primary-foreground' : 'bg-secondary'} rounded-xl p-3`}
+                      >
+                        <p className="text-sm">{message.content}</p>
+                        <p className="text-xs opacity-70 text-right mt-1">{message.timestamp}</p>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
+                
+                <div className="p-3 border-t">
+                  <div className="flex gap-2">
+                    <Input 
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Type a message..."
+                      className="flex-grow"
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    />
+                    <Button 
+                      onClick={handleSendMessage} 
+                      className="shrink-0"
+                      size="icon"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m22 2-7 20-4-9-9-4Z"></path>
+                        <path d="M22 2 11 13"></path>
+                      </svg>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Controls */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
@@ -139,6 +251,16 @@ const VideoContainer: React.FC = () => {
                 disabled={isSkipping}
               >
                 {isAudioMuted ? <VolumeX size={24} /> : <Volume size={24} />}
+              </Button>
+              
+              <Button 
+                size="lg"
+                variant={showTextChat ? "default" : "secondary"}
+                className="rounded-full w-14 h-14 flex items-center justify-center"
+                onClick={toggleTextChat}
+                disabled={isSkipping}
+              >
+                <MessageSquare size={24} />
               </Button>
             </div>
           </>
