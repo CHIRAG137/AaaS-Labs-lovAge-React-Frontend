@@ -23,6 +23,9 @@ const Messaging = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
+  console.log("Messaging component rendered");
+  console.log("Location state:", location.state);
+  
   // Check if friend data is available in the location state
   const friendData = location.state?.friend;
   
@@ -33,8 +36,14 @@ const Messaging = () => {
       navigate('/friends');
     } else {
       console.log("Friend data received:", friendData);
+      
+      // Show a toast that we've started chatting with this friend
+      toast({
+        title: "Chat opened",
+        description: `You can now chat with ${friendData.name}`,
+      });
     }
-  }, [friendData, navigate]);
+  }, [friendData, navigate, toast]);
   
   // Use the friend data from state or fallback to default
   const friend: Friend = friendData || { 

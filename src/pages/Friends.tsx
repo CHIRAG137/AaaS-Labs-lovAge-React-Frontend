@@ -41,9 +41,11 @@ const Friends = () => {
   };
   
   const startChat = (friend: { id: string; name: string; image: string; }) => {
-    // Navigate to messaging page with friend data - ensure we're pushing directly to this route
+    console.log("Starting chat with:", friend);
+    // Navigate directly to messaging page with friend data
     navigate('/messaging', { 
-      state: { friend }
+      state: { friend },
+      replace: false // Make sure we're not replacing the current page in history
     });
   };
   
