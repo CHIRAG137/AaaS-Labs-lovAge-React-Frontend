@@ -12,6 +12,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useToast } from '@/components/ui/use-toast';
 import { LogIn } from 'lucide-react';
+import axios from 'axios'
+
+const API_URL = 'http://localhost:5000/api';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -36,24 +39,27 @@ const Login = () => {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      // Here you would typically authenticate with a backend
-      // For now, we'll simulate a successful login
-      console.log("Login data:", data);
-      
-      setTimeout(() => {
-        toast({
-          title: "Login successful!",
-          description: "Welcome back to GoldenChat.",
-        });
-        navigate('/profile');
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
+      const response = await axios.post(`${API_URL}/auth/login`, data);
+
+      // If your API returns a token or user data
+      // localStorage.setItem('token', response.data.token);
+
+      toast({
+        title: "Login successful!",
+        description: "Welcome back to GoldenChat.",
+      });
+
+      navigate('/profile');
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || "Please check your credentials and try again.";
+
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: message,
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -61,7 +67,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
@@ -84,7 +90,7 @@ const Login = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="password"
@@ -98,7 +104,7 @@ const Login = () => {
                     </FormItem>
                   )}
                 />
-                
+
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Logging in..." : (
                     <>
@@ -120,7 +126,7 @@ const Login = () => {
           </CardFooter>
         </Card>
       </main>
-      
+
       <Footer />
     </div>
   );
