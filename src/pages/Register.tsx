@@ -18,7 +18,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getPlaceSuggestions, getPlaceDetails, getAddressFromCoordinates, PlaceSuggestion } from '@/utils/googlePlacesApi';
 
-// API base URL - update this to match your server URL
 const API_URL = 'http://localhost:5000/api';
 
 const registerSchema = z.object({
