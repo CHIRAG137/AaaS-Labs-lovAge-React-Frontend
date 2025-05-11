@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -12,8 +12,10 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import { UserPlus } from 'lucide-react';
-import axios from 'axios'; // Make sure to install axios: npm install axios
+import { UserPlus, MapPin, Map } from 'lucide-react';
+import axios from 'axios';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // API base URL - update this to match your server URL
 const API_URL = 'http://localhost:5000/api';
@@ -31,6 +33,9 @@ const registerSchema = z.object({
   preferredCommunication: z.array(z.string()).refine((value) => value.length > 0, {
     message: "Please select at least one communication preference",
   }),
+  address: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -38,11 +43,20 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+interface LocationError {
+  type: string;
+  message: string;
+}
+
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [locationError, setLocationError] = useState<LocationError | null>(null);
+  const [addressSuggestions, setAddressSuggestions] = useState<Array<{ description: string, place_id: string }>>([]);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   
   const communicationOptions = [
     { id: "video", label: "Video Calls" },
@@ -61,8 +75,119 @@ const Register = () => {
       hobbies: '',
       about: '',
       preferredCommunication: [],
+      address: '',
+      latitude: undefined,
+      longitude: undefined,
     },
   });
+
+  // Function to get current location
+  const getCurrentLocation = async () => {
+    setIsLoadingLocation(true);
+    setLocationError(null);
+
+    if (!navigator.geolocation) {
+      setLocationError({
+        type: 'unsupported',
+        message: 'Geolocation is not supported by your browser'
+      });
+      setIsLoadingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        form.setValue('latitude', latitude);
+        form.setValue('longitude', longitude);
+        
+        // Try to get address from coordinates using a reverse geocoding service
+        try {
+          // In a production app, you would use Google's Geocoding API with your API key
+          // For this example, we'll simulate a success response
+          form.setValue('address', `Location captured (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+          toast({
+            title: "Location captured",
+            description: "Your current location has been successfully captured.",
+          });
+        } catch (error) {
+          console.error("Error getting address from coordinates:", error);
+          form.setValue('address', `Location: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        }
+        
+        setIsLoadingLocation(false);
+      },
+      (error) => {
+        let errorMessage = "Unknown error occurred";
+        
+        switch(error.code) {
+          case 1:
+            errorMessage = "Permission to access location was denied";
+            break;
+          case 2:
+            errorMessage = "Position is unavailable";
+            break;
+          case 3:
+            errorMessage = "Location request timed out";
+            break;
+        }
+        
+        setLocationError({
+          type: 'error',
+          message: errorMessage
+        });
+        setIsLoadingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  };
+
+  // Function to handle address input and fetch suggestions
+  const handleAddressInput = (value: string) => {
+    form.setValue('address', value);
+    
+    if (value.length > 3) {
+      setIsLoadingSuggestions(true);
+      
+      // In a real app, you would call the Google Places API here
+      // For this example, we'll simulate API results
+      setTimeout(() => {
+        if (value.includes("oak")) {
+          setAddressSuggestions([
+            { description: "Oak Street, San Francisco, CA", place_id: "1" },
+            { description: "Oakland, CA, USA", place_id: "2" },
+            { description: "Oak Park, IL, USA", place_id: "3" }
+          ]);
+        } else if (value.includes("pine")) {
+          setAddressSuggestions([
+            { description: "Pine Street, New York, NY", place_id: "4" },
+            { description: "Pinedale, WY, USA", place_id: "5" }
+          ]);
+        } else {
+          setAddressSuggestions([]);
+        }
+        setIsLoadingSuggestions(false);
+      }, 500);
+    } else {
+      setAddressSuggestions([]);
+    }
+  };
+
+  // Function to select an address from suggestions
+  const selectAddress = (address: string) => {
+    form.setValue('address', address);
+    setAddressSuggestions([]);
+    
+    // In a real app, you would use the Google Places API to get latitude and longitude
+    // For this example, we'll set placeholder values
+    form.setValue('latitude', 37.7749);
+    form.setValue('longitude', -122.4194);
+    
+    toast({
+      title: "Address selected",
+      description: "Your selected address has been set.",
+    });
+  };
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
@@ -77,6 +202,9 @@ const Register = () => {
         hobbies: data.hobbies,
         about: data.about,
         preferredCommunication: data.preferredCommunication,
+        address: data.address,
+        latitude: data.latitude,
+        longitude: data.longitude,
       });
       
       // Handle successful registration
@@ -129,7 +257,9 @@ const Register = () => {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
             <CardDescription>
-              {step === 1 ? "Enter your details to get started" : "Tell us a little about yourself"}
+              {step === 1 ? "Enter your details to get started" : 
+               step === 2 ? "Tell us a little about yourself" : 
+               "Where are you located?"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -308,6 +438,97 @@ const Register = () => {
                   </>
                 )}
                 
+                {step === 3 && (
+                  <>
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Your Location</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Sharing your location helps us connect you with seniors in your area
+                      </p>
+                      
+                      <div className="flex items-center justify-between gap-2">
+                        <Button 
+                          type="button" 
+                          onClick={getCurrentLocation} 
+                          disabled={isLoadingLocation} 
+                          className="flex-1"
+                          variant="outline"
+                        >
+                          <MapPin className="mr-2" size={18} />
+                          {isLoadingLocation ? "Getting Location..." : "Use Current Location"}
+                        </Button>
+                        
+                        <div className="text-center text-sm text-muted-foreground">
+                          or
+                        </div>
+                        
+                        <Button 
+                          type="button" 
+                          onClick={() => {
+                            form.setValue('address', '');
+                            setAddressSuggestions([]);
+                          }} 
+                          className="flex-1"
+                          variant="outline"
+                        >
+                          <Map className="mr-2" size={18} />
+                          Enter Address Manually
+                        </Button>
+                      </div>
+                      
+                      {locationError && (
+                        <Alert variant="destructive" className="mt-2">
+                          <AlertDescription>{locationError.message}</AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      <FormField
+                        control={form.control}
+                        name="address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input 
+                                  placeholder="Start typing your address..." 
+                                  {...field} 
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    handleAddressInput(e.target.value);
+                                  }}
+                                  className="text-base" 
+                                />
+                                {isLoadingSuggestions && (
+                                  <div className="absolute right-3 top-3 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                                )}
+                              </div>
+                            </FormControl>
+                            <FormDescription>
+                              Enter your address or use your current location
+                            </FormDescription>
+                            <FormMessage />
+                            
+                            {addressSuggestions.length > 0 && (
+                              <div className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                                {addressSuggestions.map((suggestion) => (
+                                  <div 
+                                    key={suggestion.place_id}
+                                    className="px-4 py-2 text-sm hover:bg-accent cursor-pointer"
+                                    onClick={() => selectAddress(suggestion.description)}
+                                  >
+                                    {suggestion.description}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+                
                 <div className="flex justify-between gap-4 pt-4">
                   {step > 1 && (
                     <Button type="button" variant="outline" onClick={prevStep}>
@@ -315,7 +536,7 @@ const Register = () => {
                     </Button>
                   )}
                   
-                  {step < 2 ? (
+                  {step < 3 ? (
                     <Button type="button" onClick={nextStep} className="ml-auto">
                       Next
                     </Button>
