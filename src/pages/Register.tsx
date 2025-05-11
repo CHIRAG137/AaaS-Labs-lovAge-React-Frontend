@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -236,7 +237,7 @@ const Register = () => {
 
   const nextStep = () => {
     const fieldsToValidate = step === 1 
-      ? ['name', 'email', 'password', 'confirmPassword', 'age']
+      ? ['name', 'email', 'password', 'confirmPassword', 'age', 'address']
       : ['hobbies', 'about', 'preferredCommunication'];
       
     form.trigger(fieldsToValidate as any).then((isValid) => {
@@ -259,7 +260,7 @@ const Register = () => {
             <CardDescription>
               {step === 1 ? "Enter your details to get started" : 
                step === 2 ? "Tell us a little about yourself" : 
-               "Where are you located?"}
+               "Complete your profile"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -338,6 +339,94 @@ const Register = () => {
                         </FormItem>
                       )}
                     />
+
+                    {/* Location section moved to step 1 */}
+                    <div className="space-y-4 mt-6">
+                      <h3 className="text-lg font-medium">Your Location</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Sharing your location helps us connect you with seniors in your area
+                      </p>
+                      
+                      <div className="flex items-center justify-between gap-2">
+                        <Button 
+                          type="button" 
+                          onClick={getCurrentLocation} 
+                          disabled={isLoadingLocation} 
+                          className="flex-1"
+                          variant="outline"
+                        >
+                          <MapPin className="mr-2" size={18} />
+                          {isLoadingLocation ? "Getting Location..." : "Use Current Location"}
+                        </Button>
+                        
+                        <div className="text-center text-sm text-muted-foreground">
+                          or
+                        </div>
+                        
+                        <Button 
+                          type="button" 
+                          onClick={() => {
+                            form.setValue('address', '');
+                            setAddressSuggestions([]);
+                          }} 
+                          className="flex-1"
+                          variant="outline"
+                        >
+                          <Map className="mr-2" size={18} />
+                          Enter Address
+                        </Button>
+                      </div>
+                      
+                      {locationError && (
+                        <Alert variant="destructive" className="mt-2">
+                          <AlertDescription>{locationError.message}</AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      <FormField
+                        control={form.control}
+                        name="address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input 
+                                  placeholder="Start typing your address..." 
+                                  {...field} 
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    handleAddressInput(e.target.value);
+                                  }}
+                                  className="text-base" 
+                                />
+                                {isLoadingSuggestions && (
+                                  <div className="absolute right-3 top-3 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                                )}
+                              </div>
+                            </FormControl>
+                            <FormDescription>
+                              Enter your address or use your current location
+                            </FormDescription>
+                            <FormMessage />
+                            
+                            {addressSuggestions.length > 0 && (
+                              <div className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                                {addressSuggestions.map((suggestion) => (
+                                  <div 
+                                    key={suggestion.place_id}
+                                    className="px-4 py-2 text-sm hover:bg-accent cursor-pointer"
+                                    onClick={() => selectAddress(suggestion.description)}
+                                  >
+                                    {suggestion.description}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </>
                 )}
                 
@@ -438,97 +527,6 @@ const Register = () => {
                   </>
                 )}
                 
-                {step === 3 && (
-                  <>
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Your Location</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Sharing your location helps us connect you with seniors in your area
-                      </p>
-                      
-                      <div className="flex items-center justify-between gap-2">
-                        <Button 
-                          type="button" 
-                          onClick={getCurrentLocation} 
-                          disabled={isLoadingLocation} 
-                          className="flex-1"
-                          variant="outline"
-                        >
-                          <MapPin className="mr-2" size={18} />
-                          {isLoadingLocation ? "Getting Location..." : "Use Current Location"}
-                        </Button>
-                        
-                        <div className="text-center text-sm text-muted-foreground">
-                          or
-                        </div>
-                        
-                        <Button 
-                          type="button" 
-                          onClick={() => {
-                            form.setValue('address', '');
-                            setAddressSuggestions([]);
-                          }} 
-                          className="flex-1"
-                          variant="outline"
-                        >
-                          <Map className="mr-2" size={18} />
-                          Enter Address Manually
-                        </Button>
-                      </div>
-                      
-                      {locationError && (
-                        <Alert variant="destructive" className="mt-2">
-                          <AlertDescription>{locationError.message}</AlertDescription>
-                        </Alert>
-                      )}
-                      
-                      <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Address</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Input 
-                                  placeholder="Start typing your address..." 
-                                  {...field} 
-                                  onChange={(e) => {
-                                    field.onChange(e);
-                                    handleAddressInput(e.target.value);
-                                  }}
-                                  className="text-base" 
-                                />
-                                {isLoadingSuggestions && (
-                                  <div className="absolute right-3 top-3 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                                )}
-                              </div>
-                            </FormControl>
-                            <FormDescription>
-                              Enter your address or use your current location
-                            </FormDescription>
-                            <FormMessage />
-                            
-                            {addressSuggestions.length > 0 && (
-                              <div className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
-                                {addressSuggestions.map((suggestion) => (
-                                  <div 
-                                    key={suggestion.place_id}
-                                    className="px-4 py-2 text-sm hover:bg-accent cursor-pointer"
-                                    onClick={() => selectAddress(suggestion.description)}
-                                  >
-                                    {suggestion.description}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </>
-                )}
-                
                 <div className="flex justify-between gap-4 pt-4">
                   {step > 1 && (
                     <Button type="button" variant="outline" onClick={prevStep}>
@@ -536,7 +534,7 @@ const Register = () => {
                     </Button>
                   )}
                   
-                  {step < 3 ? (
+                  {step < 2 ? (
                     <Button type="button" onClick={nextStep} className="ml-auto">
                       Next
                     </Button>
