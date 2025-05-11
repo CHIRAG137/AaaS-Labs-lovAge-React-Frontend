@@ -1,6 +1,4 @@
-
-// The API key would be provided by the user
-const GOOGLE_API_KEY = "AIzaSyCSak5D8Z_NbVeimYQ2nb2U-ixUhvPN-Ec"; 
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 
 export interface PlaceSuggestion {
   description: string;
@@ -49,12 +47,12 @@ export const getPlaceSuggestions = async (input: string): Promise<PlaceSuggestio
     await loadGooglePlacesAPI();
     
     return new Promise<PlaceSuggestion[]>((resolve) => {
-      const autocompleteService = new google.maps.places.AutocompleteService();
+      const autocompleteService = new window.google.maps.places.AutocompleteService();
       
       autocompleteService.getPlacePredictions(
         { input },
         (predictions, status) => {
-          if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+          if (status !== window.google.maps.places.PlacesServiceStatus.OK || !predictions) {
             resolve([]);
             return;
           }
@@ -81,12 +79,12 @@ export const getPlaceDetails = async (placeId: string): Promise<PlaceDetails | n
     
     return new Promise<PlaceDetails | null>((resolve) => {
       const map = document.createElement('div');
-      const placesService = new google.maps.places.PlacesService(map);
+      const placesService = new window.google.maps.places.PlacesService(map);
       
       placesService.getDetails(
         { placeId, fields: ['formatted_address', 'geometry'] },
         (place, status) => {
-          if (status !== google.maps.places.PlacesServiceStatus.OK || !place) {
+          if (status !== window.google.maps.places.PlacesServiceStatus.OK || !place) {
             resolve(null);
             return;
           }
@@ -115,11 +113,11 @@ export const getAddressFromCoordinates = async (latitude: number, longitude: num
     await loadGooglePlacesAPI();
     
     return new Promise<string>((resolve) => {
-      const geocoder = new google.maps.Geocoder();
+      const geocoder = new window.google.maps.Geocoder();
       const latlng = { lat: latitude, lng: longitude };
       
       geocoder.geocode({ location: latlng }, (results, status) => {
-        if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
+        if (status === window.google.maps.GeocoderStatus.OK && results && results[0]) {
           resolve(results[0].formatted_address);
         } else {
           resolve(`Location at ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
