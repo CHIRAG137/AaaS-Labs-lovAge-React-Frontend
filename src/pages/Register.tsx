@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -17,6 +16,7 @@ import { UserPlus, MapPin, Map } from 'lucide-react';
 import axios from 'axios';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getPlaceSuggestions, getPlaceDetails, getAddressFromCoordinates, PlaceSuggestion } from '@/utils/googlePlacesApi';
 
 // API base URL - update this to match your server URL
 const API_URL = 'http://localhost:5000/api';
@@ -34,7 +34,7 @@ const registerSchema = z.object({
   preferredCommunication: z.array(z.string()).refine((value) => value.length > 0, {
     message: "Please select at least one communication preference",
   }),
-  address: z.string().optional(),
+  address: z.string().min(3, { message: "Please provide your address" }),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -55,7 +55,7 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [locationError, setLocationError] = useState<LocationError | null>(null);
-  const [addressSuggestions, setAddressSuggestions] = useState<Array<{ description: string, place_id: string }>>([]);
+  const [addressSuggestions, setAddressSuggestions] = useState<PlaceSuggestion[]>([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   
@@ -102,18 +102,17 @@ const Register = () => {
         form.setValue('latitude', latitude);
         form.setValue('longitude', longitude);
         
-        // Try to get address from coordinates using a reverse geocoding service
+        // Get the address from coordinates using Google's Geocoding API
         try {
-          // In a production app, you would use Google's Geocoding API with your API key
-          // For this example, we'll simulate a success response
-          form.setValue('address', `Location captured (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+          const address = await getAddressFromCoordinates(latitude, longitude);
+          form.setValue('address', address);
           toast({
             title: "Location captured",
             description: "Your current location has been successfully captured.",
           });
         } catch (error) {
           console.error("Error getting address from coordinates:", error);
-          form.setValue('address', `Location: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          form.setValue('address', `Location at ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
         }
         
         setIsLoadingLocation(false);
@@ -143,51 +142,50 @@ const Register = () => {
     );
   };
 
-  // Function to handle address input and fetch suggestions
-  const handleAddressInput = (value: string) => {
+  // Function to handle address input and fetch suggestions from Google Places API
+  const handleAddressInput = async (value: string) => {
     form.setValue('address', value);
     
-    if (value.length > 3) {
+    if (value.length > 2) {
       setIsLoadingSuggestions(true);
       
-      // In a real app, you would call the Google Places API here
-      // For this example, we'll simulate API results
-      setTimeout(() => {
-        if (value.includes("oak")) {
-          setAddressSuggestions([
-            { description: "Oak Street, San Francisco, CA", place_id: "1" },
-            { description: "Oakland, CA, USA", place_id: "2" },
-            { description: "Oak Park, IL, USA", place_id: "3" }
-          ]);
-        } else if (value.includes("pine")) {
-          setAddressSuggestions([
-            { description: "Pine Street, New York, NY", place_id: "4" },
-            { description: "Pinedale, WY, USA", place_id: "5" }
-          ]);
-        } else {
-          setAddressSuggestions([]);
-        }
-        setIsLoadingSuggestions(false);
-      }, 500);
+      try {
+        const suggestions = await getPlaceSuggestions(value);
+        setAddressSuggestions(suggestions);
+      } catch (error) {
+        console.error("Error fetching address suggestions:", error);
+        setAddressSuggestions([]);
+      }
+      
+      setIsLoadingSuggestions(false);
     } else {
       setAddressSuggestions([]);
     }
   };
 
   // Function to select an address from suggestions
-  const selectAddress = (address: string) => {
-    form.setValue('address', address);
+  const selectAddress = async (suggestion: PlaceSuggestion) => {
+    form.setValue('address', suggestion.description);
     setAddressSuggestions([]);
     
-    // In a real app, you would use the Google Places API to get latitude and longitude
-    // For this example, we'll set placeholder values
-    form.setValue('latitude', 37.7749);
-    form.setValue('longitude', -122.4194);
-    
-    toast({
-      title: "Address selected",
-      description: "Your selected address has been set.",
-    });
+    // Get detailed place information including coordinates
+    try {
+      const placeDetails = await getPlaceDetails(suggestion.place_id);
+      if (placeDetails) {
+        form.setValue('latitude', placeDetails.geometry.location.lat);
+        form.setValue('longitude', placeDetails.geometry.location.lng);
+        
+        // Use the formatted address from place details
+        form.setValue('address', placeDetails.formatted_address);
+        
+        toast({
+          title: "Address selected",
+          description: "Your selected address has been set.",
+        });
+      }
+    } catch (error) {
+      console.error("Error getting place details:", error);
+    }
   };
 
   const onSubmit = async (data: RegisterFormValues) => {
@@ -259,8 +257,7 @@ const Register = () => {
             <CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
             <CardDescription>
               {step === 1 ? "Enter your details to get started" : 
-               step === 2 ? "Tell us a little about yourself" : 
-               "Complete your profile"}
+               "Tell us a little about yourself"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -340,7 +337,7 @@ const Register = () => {
                       )}
                     />
 
-                    {/* Location section moved to step 1 */}
+                    {/* Location section */}
                     <div className="space-y-4 mt-6">
                       <h3 className="text-lg font-medium">Your Location</h3>
                       <p className="text-sm text-muted-foreground">
@@ -393,7 +390,7 @@ const Register = () => {
                               <div className="relative">
                                 <Input 
                                   placeholder="Start typing your address..." 
-                                  {...field} 
+                                  value={field.value}
                                   onChange={(e) => {
                                     field.onChange(e);
                                     handleAddressInput(e.target.value);
@@ -416,7 +413,7 @@ const Register = () => {
                                   <div 
                                     key={suggestion.place_id}
                                     className="px-4 py-2 text-sm hover:bg-accent cursor-pointer"
-                                    onClick={() => selectAddress(suggestion.description)}
+                                    onClick={() => selectAddress(suggestion)}
                                   >
                                     {suggestion.description}
                                   </div>
