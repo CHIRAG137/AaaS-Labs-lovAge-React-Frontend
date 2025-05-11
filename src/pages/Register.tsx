@@ -213,8 +213,8 @@ const Register = () => {
       });
       
       // Store user data or token in localStorage if needed
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      
+      localStorage.setItem('authToken', response.data.token);
+
       // Redirect to profile page
       navigate('/profile');
     } catch (error: any) {

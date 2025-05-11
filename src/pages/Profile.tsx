@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -16,6 +16,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useToast } from '@/components/ui/use-toast';
 import { Edit, Save, User } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api';
 
 const profileSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -33,37 +36,59 @@ const Profile = () => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Mock data - in a real app this would come from a backend
-  const profileData = {
-    name: "Margaret Johnson",
-    email: "margaret.j@example.com",
-    age: "68",
-    location: "San Francisco, CA",
-    hobbies: "Gardening, Reading, Knitting, Cooking, Playing Chess",
-    about: "Retired teacher who loves spending time with grandchildren and reading mystery novels. Looking to connect with other book lovers and maybe join a virtual book club.",
-    avatarUrl: "https://images.unsplash.com/photo-1581579438747-104c53d7fbc0",
-    joinDate: "January 2023",
-  };
+  const [profileData, setProfileData] = useState<any>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: profileData.name,
-      email: profileData.email,
-      age: profileData.age,
-      location: profileData.location,
-      hobbies: profileData.hobbies,
-      about: profileData.about,
+      name: '',
+      email: '',
+      age: '',
+      location: '',
+      hobbies: '',
+      about: '',
     },
   });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
+      try {
+        const response = await axios.get(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = response.data;
+        setProfileData(data);
+
+        form.reset({
+          name: data.name,
+          email: data.email,
+          age: data.age,
+          location: data.location,
+          hobbies: data.hobbies,
+          about: data.about,
+        });
+      } catch (err) {
+        toast({
+          title: "Error loading profile",
+          description: "Please login again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchProfile();
+  }, [form, toast]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     setIsLoading(true);
     try {
       // Here you would typically update the profile on a backend
       console.log("Profile update data:", data);
-      
+
       setTimeout(() => {
         toast({
           title: "Profile updated!",
@@ -82,42 +107,42 @@ const Profile = () => {
     }
   };
 
-  const hobbiesList = profileData.hobbies.split(',').map(hobby => hobby.trim());
+  const hobbiesList = profileData?.hobbies?.split(',').map(hobby => hobby.trim()) || [];
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-grow container mx-auto px-4 py-8">
         <h1 className="page-title mb-6">My <span className="text-primary">Profile</span></h1>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Profile Sidebar */}
           <div className="md:col-span-1">
             <Card>
               <CardContent className="p-6 flex flex-col items-center">
                 <Avatar className="w-32 h-32 mb-4">
-                  <AvatarImage src={profileData.avatarUrl} alt={profileData.name} />
+                  <AvatarImage src={profileData?.avatarUrl} alt={profileData?.name} />
                   <AvatarFallback>
                     <User className="w-12 h-12" />
                   </AvatarFallback>
                 </Avatar>
-                
-                <h2 className="text-2xl font-semibold">{profileData.name}</h2>
-                <p className="text-muted-foreground mb-4">{profileData.location}</p>
-                
+
+                <h2 className="text-2xl font-semibold">{profileData?.name}</h2>
+                <p className="text-muted-foreground mb-4">{profileData?.location}</p>
+
                 <div className="flex flex-wrap gap-2 justify-center mb-4">
                   {hobbiesList.slice(0, 3).map((hobby, index) => (
                     <Badge key={index} variant="secondary" className="text-sm">{hobby}</Badge>
                   ))}
                 </div>
-                
+
                 <p className="text-sm text-muted-foreground">
-                  Member since {profileData.joinDate}
+                  Member since {profileData?.joinDate}
                 </p>
-                
-                <Button 
-                  className="w-full mt-4" 
+
+                <Button
+                  className="w-full mt-4"
                   variant="outline"
                   onClick={() => setIsEditing(true)}
                 >
@@ -127,7 +152,7 @@ const Profile = () => {
               </CardContent>
             </Card>
           </div>
-          
+
           {/* Main Content */}
           <div className="md:col-span-2">
             <Tabs defaultValue="about" className="w-full">
@@ -135,7 +160,7 @@ const Profile = () => {
                 <TabsTrigger value="about">About Me</TabsTrigger>
                 <TabsTrigger value="edit" disabled={!isEditing}>Edit Profile</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="about">
                 <Card>
                   <CardHeader>
@@ -145,9 +170,9 @@ const Profile = () => {
                     <div className="space-y-4">
                       <div>
                         <h3 className="text-lg font-medium">Bio</h3>
-                        <p className="mt-1 text-muted-foreground">{profileData.about}</p>
+                        <p className="mt-1 text-muted-foreground">{profileData?.about}</p>
                       </div>
-                      
+
                       <div>
                         <h3 className="text-lg font-medium">Interests & Hobbies</h3>
                         <div className="flex flex-wrap gap-2 mt-1">
@@ -156,21 +181,23 @@ const Profile = () => {
                           ))}
                         </div>
                       </div>
-                      
+
                       <div>
                         <h3 className="text-lg font-medium">Basic Information</h3>
                         <dl className="mt-1 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
                           <div>
                             <dt className="text-sm text-muted-foreground">Age</dt>
-                            <dd className="text-base">{profileData.age}</dd>
+                            <dd className="text-base">{profileData?.age}</dd>
                           </div>
                           <div>
                             <dt className="text-sm text-muted-foreground">Location</dt>
-                            <dd className="text-base">{profileData.location}</dd>
+                            <dd className="text-base">
+                              {profileData?.address ? `${profileData.address.slice(0, 40)}...` : ""}
+                            </dd>
                           </div>
                           <div>
                             <dt className="text-sm text-muted-foreground">Email</dt>
-                            <dd className="text-base">{profileData.email}</dd>
+                            <dd className="text-base">{profileData?.email}</dd>
                           </div>
                         </dl>
                       </div>
@@ -178,7 +205,7 @@ const Profile = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-              
+
               <TabsContent value="edit">
                 <Card>
                   <CardHeader>
@@ -203,7 +230,7 @@ const Profile = () => {
                             </FormItem>
                           )}
                         />
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <FormField
                             control={form.control}
@@ -218,7 +245,7 @@ const Profile = () => {
                               </FormItem>
                             )}
                           />
-                          
+
                           <FormField
                             control={form.control}
                             name="age"
@@ -233,7 +260,7 @@ const Profile = () => {
                             )}
                           />
                         </div>
-                        
+
                         <FormField
                           control={form.control}
                           name="location"
@@ -241,7 +268,7 @@ const Profile = () => {
                             <FormItem>
                               <FormLabel>Location</FormLabel>
                               <FormControl>
-                                <Input 
+                                <Input
                                   placeholder="City, State"
                                   {...field}
                                   value={field.value || ''}
@@ -252,7 +279,7 @@ const Profile = () => {
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={form.control}
                           name="hobbies"
@@ -260,7 +287,7 @@ const Profile = () => {
                             <FormItem>
                               <FormLabel>Interests & Hobbies</FormLabel>
                               <FormControl>
-                                <Input 
+                                <Input
                                   {...field}
                                   className="text-base"
                                 />
@@ -272,7 +299,7 @@ const Profile = () => {
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={form.control}
                           name="about"
@@ -280,7 +307,7 @@ const Profile = () => {
                             <FormItem>
                               <FormLabel>About Me</FormLabel>
                               <FormControl>
-                                <Textarea 
+                                <Textarea
                                   {...field}
                                   className="text-base min-h-[120px]"
                                 />
@@ -292,11 +319,11 @@ const Profile = () => {
                             </FormItem>
                           )}
                         />
-                        
+
                         <div className="flex justify-end gap-3 pt-2">
-                          <Button 
-                            type="button" 
-                            variant="outline" 
+                          <Button
+                            type="button"
+                            variant="outline"
                             onClick={() => setIsEditing(false)}
                           >
                             Cancel
@@ -319,7 +346,7 @@ const Profile = () => {
           </div>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );
