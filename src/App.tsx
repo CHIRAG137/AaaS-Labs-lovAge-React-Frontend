@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import Games from "./pages/Games";
 import Messaging from "./pages/Messaging";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Create the query client
 const queryClient = new QueryClient();
@@ -28,16 +29,30 @@ const App: React.FC = () => {
           <Toaster />
           <Sonner />
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/find-friends" element={<FindFriends />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/" element={
+              <ProtectedRoute><Index /></ProtectedRoute>
+            } />
+            <Route path="/find-friends" element={
+              <ProtectedRoute><FindFriends /></ProtectedRoute>
+            } />
+            <Route path="/friends" element={
+              <ProtectedRoute><Friends /></ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute><Settings /></ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute><Profile /></ProtectedRoute>
+            } />
+            <Route path="/games" element={
+              <ProtectedRoute><Games /></ProtectedRoute>
+            } />
+            <Route path="/messaging" element={
+              <ProtectedRoute><Messaging /></ProtectedRoute>
+            } />
+            {/* These remain public */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/games" element={<Games />} />
-            <Route path="/messaging" element={<Messaging />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>

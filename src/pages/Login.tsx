@@ -41,8 +41,8 @@ const Login = () => {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, data);
 
-      // If your API returns a token or user data
-      // localStorage.setItem('token', response.data.token);
+      // API returns a token or user data
+      localStorage.setItem('authToken', response.data.token);
 
       toast({
         title: "Login successful!",
