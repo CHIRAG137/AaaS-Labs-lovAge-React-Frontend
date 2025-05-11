@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { FontSizeIcon } from './icons/FontSizeIcon';
 import { useToast } from '@/components/ui/use-toast';
@@ -11,14 +10,22 @@ const Header: React.FC = () => {
   const { toast } = useToast();
   const location = useLocation();
   
-  // Mock authenticated state - in a real app, this would come from your auth context/provider
-  // For testing purposes, change this to true/false to see the different navigation states
-  const isAuthenticated = false;
-  
+  // Use state to track the authentication status
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    // Check if there's a token in localStorage
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    }
+  }, []);
+
   const increaseFontSize = () => {
-    // Get the current font size
     const currentSize = parseFloat(window.getComputedStyle(document.documentElement).fontSize);
-    // Increase by 2px
     document.documentElement.style.fontSize = `${currentSize + 2}px`;
     
     toast({
