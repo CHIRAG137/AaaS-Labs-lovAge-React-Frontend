@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Volume, VolumeX, Mic, MicOff, Phone, SkipForward, MessageSquare, X, Maximize, Minimize } from 'lucide-react';
+import { Volume, VolumeX, Mic, MicOff, Phone, SkipForward, MessageSquare, X, Maximize, Minimize, Video, VideoOff } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -26,10 +27,41 @@ const VideoContainer: React.FC = () => {
   const [videoPosition, setVideoPosition] = useState({ x: 4, y: 4 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [hasVideo, setHasVideo] = useState(true);
+  const [peerHasVideo, setPeerHasVideo] = useState(true);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const localVideoRef = useRef<HTMLDivElement>(null);
+  
+  // WebRTC refs
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
+  const localVideoElementRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoElementRef = useRef<HTMLVideoElement>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const isInitiatorRef = useRef(false);
+  const isConnectedRef = useRef(false);
+  
+  // Signaling server simulation (in a real app, this would be a WebSocket connection)
+  const signalingChannel = useRef<{
+    onmessage: ((event: { data: string }) => void) | null;
+    send: (message: string) => void;
+  }>({
+    onmessage: null,
+    send: (message: string) => {
+      // Simulate sending a message to the peer
+      // In a real app, this would send data through a WebSocket
+      console.log('Sending signaling message:', JSON.parse(message));
+      
+      // Simulate delay and reception
+      setTimeout(() => {
+        if (signalingChannel.current.onmessage) {
+          signalingChannel.current.onmessage({ data: message });
+        }
+      }, 500);
+    }
+  });
 
   // Scroll to bottom when new messages are added
   useEffect(() => {
@@ -48,24 +80,215 @@ const VideoContainer: React.FC = () => {
     };
   }, []);
 
-  const startChat = () => {
+  // Clean up WebRTC connections when component unmounts
+  useEffect(() => {
+    return () => {
+      endWebRTC();
+    };
+  }, []);
+
+  const setupWebRTC = async () => {
+    try {
+      // Request access to webcam and microphone
+      const mediaConstraints = {
+        audio: true,
+        video: true
+      };
+      
+      const localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+      localStreamRef.current = localStream;
+      
+      if (localVideoElementRef.current) {
+        localVideoElementRef.current.srcObject = localStream;
+      }
+      
+      // Create a new RTCPeerConnection
+      const configuration = { 
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+        ] 
+      };
+      
+      const peerConnection = new RTCPeerConnection(configuration);
+      peerConnectionRef.current = peerConnection;
+      
+      // Add local tracks to the peer connection
+      localStream.getTracks().forEach(track => {
+        if (peerConnectionRef.current) {
+          peerConnectionRef.current.addTrack(track, localStream);
+        }
+      });
+      
+      // Set up event handlers for ICE candidates
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          const message = JSON.stringify({
+            type: 'candidate',
+            candidate: event.candidate
+          });
+          signalingChannel.current.send(message);
+        }
+      };
+      
+      // Handle incoming tracks
+      peerConnection.ontrack = (event) => {
+        if (!remoteStreamRef.current) {
+          remoteStreamRef.current = new MediaStream();
+        }
+        
+        event.streams[0].getTracks().forEach(track => {
+          if (remoteStreamRef.current) {
+            remoteStreamRef.current.addTrack(track);
+          }
+        });
+        
+        if (remoteVideoElementRef.current) {
+          remoteVideoElementRef.current.srcObject = remoteStreamRef.current;
+        }
+        
+        isConnectedRef.current = true;
+      };
+      
+      // Handle connection state changes
+      peerConnection.onconnectionstatechange = () => {
+        console.log('Connection state:', peerConnection.connectionState);
+        
+        if (peerConnection.connectionState === 'disconnected' || 
+            peerConnection.connectionState === 'failed' || 
+            peerConnection.connectionState === 'closed') {
+          // Handle disconnection
+          isConnectedRef.current = false;
+          toast({
+            title: "Connection lost",
+            description: "The connection to your chat partner was lost."
+          });
+        }
+      };
+      
+      // Set up signaling channel message handler
+      signalingChannel.current.onmessage = async (event) => {
+        const message = JSON.parse(event.data);
+        
+        if (message.type === 'offer') {
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(message));
+          const answer = await peerConnection.createAnswer();
+          await peerConnection.setLocalDescription(answer);
+          
+          signalingChannel.current.send(JSON.stringify({
+            type: 'answer',
+            sdp: answer
+          }));
+          
+        } else if (message.type === 'answer') {
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(message));
+          
+        } else if (message.type === 'candidate') {
+          try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+          } catch (err) {
+            console.error('Error adding ice candidate:', err);
+          }
+          
+        } else if (message.type === 'ready') {
+          if (isInitiatorRef.current) {
+            createOffer();
+          }
+        }
+      };
+      
+      return true;
+    } catch (err) {
+      console.error('Error setting up WebRTC:', err);
+      toast({
+        title: "Camera access error",
+        description: "Could not access your camera or microphone. Please check your permissions.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+  
+  const createOffer = async () => {
+    if (!peerConnectionRef.current) return;
+    
+    try {
+      const offer = await peerConnectionRef.current.createOffer();
+      await peerConnectionRef.current.setLocalDescription(offer);
+      
+      signalingChannel.current.send(JSON.stringify({
+        type: 'offer',
+        sdp: offer
+      }));
+    } catch (err) {
+      console.error('Error creating offer:', err);
+      toast({
+        title: "Connection error",
+        description: "Could not establish a connection. Please try again."
+      });
+    }
+  };
+  
+  const endWebRTC = () => {
+    // Close peer connection
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
+    
+    // Stop all tracks in the local stream
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => track.stop());
+      localStreamRef.current = null;
+    }
+    
+    // Clear remote stream
+    remoteStreamRef.current = null;
+    
+    if (localVideoElementRef.current) {
+      localVideoElementRef.current.srcObject = null;
+    }
+    
+    if (remoteVideoElementRef.current) {
+      remoteVideoElementRef.current.srcObject = null;
+    }
+    
+    isConnectedRef.current = false;
+  };
+
+  const startChat = async () => {
     toast({
       title: "Looking for a chat partner",
       description: "Please wait while we connect you with someone nice to talk to."
     });
     
-    // In a real app, this would initiate the WebRTC connection
-    setTimeout(() => {
-      setIsChatting(true);
-      setIsSkipping(false);
-      toast({
-        title: "Connected!",
-        description: "You're now chatting with a new friend. Say hello!"
-      });
-    }, 2000);
+    // Initialize WebRTC
+    const success = await setupWebRTC();
+    if (success) {
+      // In a real app, you would connect to a signaling server here
+      
+      // For the demo, simulate finding a partner after a short delay
+      setTimeout(() => {
+        setIsChatting(true);
+        setIsSkipping(false);
+        isInitiatorRef.current = true;
+        
+        // Signal that we're ready to connect
+        signalingChannel.current.send(JSON.stringify({ type: 'ready' }));
+        
+        toast({
+          title: "Connected!",
+          description: "You're now chatting with a new friend. Say hello!"
+        });
+        
+        // In a real app, the actual connection would be established 
+        // through the signaling server
+        createOffer();
+      }, 2000);
+    }
   };
 
   const endChat = () => {
+    endWebRTC();
     setIsChatting(false);
     setShowTextChat(false);
     setMessages([]);
@@ -76,24 +299,49 @@ const VideoContainer: React.FC = () => {
   };
 
   const skipChat = () => {
+    endWebRTC();
     setIsSkipping(true);
     toast({
       title: "Skipping to next person",
       description: "Looking for someone new to talk with..."
     });
     
-    // In a real app, this would end current WebRTC connection and start a new one
-    setTimeout(() => {
-      setIsSkipping(false);
-      setMessages([]);
-      toast({
-        title: "Connected!",
-        description: "You're now chatting with a new friend. Say hello!"
-      });
+    // In a real app, this would disconnect the current WebRTC connection
+    // and establish a new one through the signaling server
+    
+    // For the demo, simulate finding a new partner after a short delay
+    setTimeout(async () => {
+      const success = await setupWebRTC();
+      if (success) {
+        setIsSkipping(false);
+        setMessages([]);
+        isInitiatorRef.current = true;
+        
+        // Signal that we're ready to connect
+        signalingChannel.current.send(JSON.stringify({ type: 'ready' }));
+        
+        toast({
+          title: "Connected!",
+          description: "You're now chatting with a new friend. Say hello!"
+        });
+        
+        // Create an offer to the new peer
+        createOffer();
+      } else {
+        setIsChatting(false);
+        setIsSkipping(false);
+      }
     }, 2000);
   };
 
   const toggleMic = () => {
+    if (localStreamRef.current) {
+      const audioTracks = localStreamRef.current.getAudioTracks();
+      audioTracks.forEach(track => {
+        track.enabled = isMuted;
+      });
+    }
+    
     setIsMuted(!isMuted);
     toast({
       title: isMuted ? "Microphone turned on" : "Microphone turned off",
@@ -102,10 +350,32 @@ const VideoContainer: React.FC = () => {
   };
 
   const toggleAudio = () => {
+    if (remoteStreamRef.current) {
+      const audioTracks = remoteStreamRef.current.getAudioTracks();
+      audioTracks.forEach(track => {
+        track.enabled = isAudioMuted;
+      });
+    }
+    
     setIsAudioMuted(!isAudioMuted);
     toast({
       title: isAudioMuted ? "Speaker turned on" : "Speaker turned off",
       description: isAudioMuted ? "You can now hear others" : "You cannot hear others now"
+    });
+  };
+  
+  const toggleVideo = () => {
+    if (localStreamRef.current) {
+      const videoTracks = localStreamRef.current.getVideoTracks();
+      videoTracks.forEach(track => {
+        track.enabled = !hasVideo;
+      });
+    }
+    
+    setHasVideo(!hasVideo);
+    toast({
+      title: hasVideo ? "Camera turned off" : "Camera turned on",
+      description: hasVideo ? "Others cannot see you now" : "Others can now see you"
     });
   };
 
@@ -213,7 +483,7 @@ const VideoContainer: React.FC = () => {
       >
         {isChatting ? (
           <>
-            {/* This would be replaced with actual video streams in a real app */}
+            {/* Remote video stream */}
             <div className="absolute inset-0 flex items-center justify-center">
               {isSkipping ? (
                 <div className="flex flex-col items-center justify-center">
@@ -221,11 +491,22 @@ const VideoContainer: React.FC = () => {
                   <p className="text-2xl font-medium mt-4">Finding new friend...</p>
                 </div>
               ) : (
-                <img 
-                  src="https://images.unsplash.com/photo-1472396961693-142e6e269027" 
-                  alt="Video placeholder" 
-                  className="w-full h-full object-cover"
-                />
+                <>
+                  <video
+                    ref={remoteVideoElementRef}
+                    autoPlay
+                    playsInline
+                    className={`w-full h-full object-cover ${!peerHasVideo ? 'hidden' : ''}`}
+                  />
+                  {!peerHasVideo && (
+                    <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
+                      <div className="text-white text-center p-4">
+                        <VideoOff size={64} className="mx-auto mb-4" />
+                        <p className="text-xl">Friend's camera is turned off</p>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             
@@ -245,17 +526,25 @@ const VideoContainer: React.FC = () => {
               className="absolute w-48 h-36 bg-black/20 rounded-lg overflow-hidden border-2 border-white cursor-move"
               style={{ 
                 left: `${videoPosition.x}px`, 
-                bottom: `${videoPosition.y}px`,
+                bottom: `${videoPosition.y + (showTextChat ? 0 : 0)}px`,
                 touchAction: 'none',
                 zIndex: 15
               }}
               onMouseDown={handleMouseDown}
             >
-              <img 
-                src="https://images.unsplash.com/photo-1582562124811-c09040d0a901" 
-                alt="Your video" 
-                className="w-full h-full object-cover pointer-events-none"
-              />
+              {hasVideo ? (
+                <video
+                  ref={localVideoElementRef}
+                  autoPlay
+                  playsInline
+                  muted // Must be muted to avoid feedback
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                  <VideoOff size={24} className="text-white" />
+                </div>
+              )}
             </div>
             
             {/* Text chat sidebar - improved positioning */}
@@ -321,6 +610,16 @@ const VideoContainer: React.FC = () => {
                 disabled={isSkipping}
               >
                 {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
+              </Button>
+
+              <Button 
+                size="lg"
+                variant={hasVideo ? "secondary" : "destructive"}
+                className="rounded-full w-14 h-14 flex items-center justify-center"
+                onClick={toggleVideo}
+                disabled={isSkipping}
+              >
+                {hasVideo ? <Video size={24} /> : <VideoOff size={24} />}
               </Button>
               
               <Button 
