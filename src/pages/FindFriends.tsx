@@ -105,17 +105,18 @@ const FindFriends = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {users.map((friend) => (
               <FriendCard
-                key={friend._id}
+                key={friend.id}
                 friend={{
-                  id: friend._id,
+                  id: friend.id,
                   name: friend.name,
                   age: friend.age,
                   distance: 'Unknown', // You can adjust this logic
                   interests: [friend.hobbies], // Adjust as needed
                   image: 'https://via.placeholder.com/150', // Use real image URL if available
+                  requestStatus: friend.requestStatus
                 }}
-                onSendFriendRequest={() => handleSendFriendRequest(friend._id, friend.name)}
-                onMessageFriend={() => handleMessageFriend(friend._id, friend.name)}
+                // onSendFriendRequest={() => handleSendFriendRequest(friend._id, friend.name)}
+                onMessageFriend={() => handleMessageFriend(friend.id, friend.name)}
               />
             ))}
           </div>
