@@ -64,8 +64,8 @@ const Friends = () => {
     }
 
     try {
-      await axios.post(
-        `${API_URL}/friends/accept-request/${id}`, // Use 'id' directly here for the requester's ID
+      const res = await axios.post(
+        `${API_URL}/friends/accept-request/${id}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -74,6 +74,13 @@ const Friends = () => {
         title: 'Friend request accepted!',
         description: `You are now friends with ${name}.`,
       });
+
+      // Update state immediately
+      const acceptedUser = friendRequests.find((r) => r._id === id);
+      if (acceptedUser) {
+        setFriends((prev) => [...prev, acceptedUser]);
+        setFriendRequests((prev) => prev.filter((r) => r._id !== id));
+      }
 
     } catch (err: any) {
       toast({
@@ -97,7 +104,7 @@ const Friends = () => {
 
     try {
       await axios.post(
-        `${API_URL}/friends/decline-request/${id}`, // Use 'id' directly here for the requester's ID
+        `${API_URL}/friends/decline-request/${id}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -106,6 +113,9 @@ const Friends = () => {
         title: 'Friend request declined',
         description: `You declined ${name}'s friend request.`,
       });
+
+      // Remove from UI immediately
+      setFriendRequests((prev) => prev.filter((r) => r._id !== id));
 
     } catch (err: any) {
       toast({
