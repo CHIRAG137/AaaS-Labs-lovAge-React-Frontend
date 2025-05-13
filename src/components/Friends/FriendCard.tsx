@@ -66,17 +66,17 @@ const FriendCard: React.FC<FriendCardProps> = ({
 
   return (
     <Card className="card-elderly overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="relative h-60">
-        <img
-          src={friend.image}
-          alt={`${friend.name}'s profile`}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-60 flex items-center justify-center bg-gray-100">
+        <div className="text-5xl font-bold text-gray-700">
+          {friend.name.charAt(0)}
+          {friend.name.charAt(friend.name.length - 1)}
+        </div>
       </div>
+
 
       <CardContent className="p-6">
         <h3 className="text-2xl font-semibold mb-1">{friend.name}, {friend.age}</h3>
-        <p className="text-muted-foreground mb-3">{friend.distance}</p>
+        {/* <p className="text-muted-foreground mb-3">{friend.distance}</p> */}
 
         <div className="flex flex-wrap gap-2 mb-4">
           {friend.interests.map(interest => (

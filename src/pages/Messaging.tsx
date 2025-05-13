@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -10,96 +9,115 @@ import { Send } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import MessageBubble from '@/components/Messaging/MessageBubble';
+import axios from 'axios';
 
-interface Friend {
-  id: string;
-  name: string;
-  image: string;
-}
+const API_URL = 'http://localhost:5000/api';
 
 const Messaging = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  
-  console.log("Messaging component rendered");
-  console.log("Location state:", location.state);
-  
+
   // Check if friend data is available in the location state
   const friendData = location.state?.friend;
-  
-  // If no friend data is provided, redirect back to friends page
+
   useEffect(() => {
     if (!friendData) {
-      console.log("No friend data found, redirecting to friends page");
       navigate('/friends');
-    } else {
-      console.log("Friend data received:", friendData);
-      
-      // Show a toast that we've started chatting with this friend
-      toast({
-        title: "Chat opened",
-        description: `You can now chat with ${friendData.name}`,
-      });
     }
-  }, [friendData, navigate, toast]);
-  
-  // Use the friend data from state or fallback to default
-  const friend: Friend = friendData || { 
-    id: '1', 
-    name: 'Elizabeth', 
-    image: 'https://images.unsplash.com/photo-1581579438747-104c53d7fbc0' 
+  }, [friendData, navigate]);
+
+  const friend = friendData || {
+    _id: '1',
+    name: 'Elizabeth',
+    image: 'https://images.unsplash.com/photo-1581579438747-104c53d7fbc0'
   };
-  
-  const [messages, setMessages] = useState([
-    { id: 1, content: "Hello there! How are you today?", sender: 'friend', timestamp: '10:05 AM' },
-    { id: 2, content: "I'm doing well, thank you for asking! How about you?", sender: 'me', timestamp: '10:07 AM' },
-    { id: 3, content: "I'm good too. Did you enjoy the book club yesterday?", sender: 'friend', timestamp: '10:10 AM' },
-  ]);
-  
+
+  const [messages, setMessages] = useState<any[]>([]);  // Fetch messages from the API
   const [newMessage, setNewMessage] = useState('');
-  
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+
+  // Fetch current user ID using the authToken
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
+      try {
+        const response = await axios.get(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCurrentUserId(response.data._id); // Set current user's ID
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
+
+  // Fetch messages from the backend
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/messages/${friend._id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        });
+        setMessages(response.data);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      }
+    };
+    fetchMessages();
+  }, [friend._id]);
+
   // Scroll to bottom when new messages are added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-  
-  const handleSendMessage = () => {
+
+  const handleSendMessage = async () => {
     if (newMessage.trim() === '') return;
-    
+
     const newMsg = {
-      id: messages.length + 1,
+      recipientId: friend._id,
       content: newMessage,
-      sender: 'me',
-      timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      sender: currentUserId, // Make sure to include the sender's ID
     };
-    
-    setMessages([...messages, newMsg]);
-    setNewMessage('');
-    
-    // Simulate a reply after a delay (in a real app, this would be handled by your backend)
-    setTimeout(() => {
-      const replyMsg = {
-        id: messages.length + 2,
-        content: "I received your message! This is a simple automated reply.",
-        sender: 'friend',
-        timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-      };
-      
-      setMessages(prevMessages => [...prevMessages, replyMsg]);
-      
-      toast({
-        title: "New Message",
-        description: `${friend.name} has sent you a message`,
+
+    try {
+      // Send the message via API
+      const response = await axios.post(`${API_URL}/messages/send`, newMsg, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
       });
-    }, 2000);
+
+      // Update the messages list
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          ...newMsg,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+      setNewMessage(''); // Clear input field
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send the message.',
+        variant: 'destructive',
+      });
+    }
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-grow container mx-auto px-4 py-6">
         <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-200px)]">
           {/* Chat header */}
@@ -113,20 +131,20 @@ const Messaging = () => {
               <p className="text-sm text-muted-foreground">Online now</p>
             </div>
           </div>
-          
+
           {/* Messages area */}
           <div className="flex-grow overflow-y-auto p-4 space-y-4" style={{ scrollBehavior: 'smooth' }}>
             {messages.map((message) => (
               <MessageBubble
-                key={message.id}
+                key={message._id} // Use message _id as key
                 content={message.content}
                 timestamp={message.timestamp}
-                isSentByMe={message.sender === 'me'}
+                isSentByMe={message.sender._id === currentUserId}  // Check if message is from the current user
               />
             ))}
             <div ref={messagesEndRef} />
           </div>
-          
+
           {/* Message input */}
           <Card className="p-3 flex gap-2 items-center">
             <Input
@@ -142,7 +160,7 @@ const Messaging = () => {
           </Card>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );
