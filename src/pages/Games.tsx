@@ -13,7 +13,7 @@ const Games = () => {
         <section className="text-center mb-8 animate-fade-in max-w-4xl mx-auto">
           <h1 className="page-title mb-4">Mental Stimulation <span className="text-primary">Games</span></h1>
           <p className="text-lg max-w-3xl mx-auto mb-8 text-muted-foreground">
-            Enjoy these games designed to keep your mind active and engaged
+            Enjoy these entertaining games designed to keep your mind active and bring a smile to your face
           </p>
         </section>
         
