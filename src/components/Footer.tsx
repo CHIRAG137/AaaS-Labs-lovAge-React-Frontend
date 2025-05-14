@@ -8,7 +8,7 @@ const Footer: React.FC = () => {
       <div className="container max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-4 md:px-0">
           <div>
-            <h2 className="text-xl font-display font-bold text-primary mb-4">GoldenChat</h2>
+            <h2 className="text-xl font-display font-bold text-primary mb-4">lovAge</h2>
             <p className="text-muted-foreground">Connecting seniors through friendly conversations</p>
           </div>
           
@@ -41,7 +41,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="mt-8 pt-4 border-t border-border text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} GoldenChat. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} lovAge. All rights reserved.</p>
         </div>
       </div>
     </footer>

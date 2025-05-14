@@ -92,7 +92,7 @@ const Settings = () => {
           </div>
           
           <p className="text-lg text-muted-foreground mb-8">
-            Customize GoldenChat to make it more comfortable for your needs.
+            Customize lovAge to make it more comfortable for your needs.
           </p>
           
           <Card className="mb-8">
@@ -134,7 +134,7 @@ const Settings = () => {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-2xl">Visual Settings</CardTitle>
-              <CardDescription>Change how GoldenChat looks to improve readability</CardDescription>
+              <CardDescription>Change how lovAge looks to improve readability</CardDescription>
             </CardHeader>
             
             <CardContent className="space-y-6">

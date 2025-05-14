@@ -12,7 +12,7 @@ const Index = () => {
       
       <main className="flex-grow container mx-auto px-4 py-6">
         <section className="text-center mb-8 animate-fade-in max-w-4xl mx-auto">
-          <h1 className="page-title mb-4">Welcome to <span className="text-primary">GoldenChat</span></h1>
+          <h1 className="page-title mb-4">Welcome to <span className="text-primary">lovAge</span></h1>
           <p className="text-lg max-w-3xl mx-auto mb-8 text-muted-foreground">
             A friendly place to meet and talk with others through simple video chats
           </p>

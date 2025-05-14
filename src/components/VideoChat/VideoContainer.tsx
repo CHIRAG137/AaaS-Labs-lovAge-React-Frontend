@@ -680,7 +680,7 @@ const VideoContainer: React.FC = () => {
       </div>
       
       <div className="mt-8 text-center">
-        <h3 className="text-2xl font-medium mb-4">How to use GoldenChat:</h3>
+        <h3 className="text-2xl font-medium mb-4">How to use lovAge:</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="card-elderly">
             <div className="text-xl mb-2 font-semibold">1. Start a chat</div>

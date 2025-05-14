@@ -208,7 +208,7 @@ const Register = () => {
       // Handle successful registration
       toast({
         title: "Registration successful!",
-        description: "Welcome to GoldenChat! Your profile has been created.",
+        description: "Welcome to lovAge! Your profile has been created.",
       });
       
       // Store user data or token in localStorage if needed

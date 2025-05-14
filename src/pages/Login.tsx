@@ -46,7 +46,7 @@ const Login = () => {
 
       toast({
         title: "Login successful!",
-        description: "Welcome back to GoldenChat.",
+        description: "Welcome back to lovAge.",
       });
 
       navigate('/profile');
